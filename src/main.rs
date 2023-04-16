@@ -12,10 +12,10 @@ fn main() {
     let dark = Rgb([18, 18, 38]);
     let light = Rgb([49, 50, 74]);
     let buffer = ImageBuffer::from_fn(width, height, |x, y| {
-        let widthfloat = width as f64;
-        let heightfloat = height as f64;
-        let theta = (x as f64 / widthfloat - 0.5) * 2.0 * PI;
-        let phi = (y as f64 / heightfloat - 0.5) * PI;
+        let width_float = width as f64;
+        let height_float = height as f64;
+        let theta = (x as f64 / width_float - 0.5) * 2.0 * PI;
+        let phi = (y as f64 / height_float - 0.5) * PI;
         let rho = 2.0;
         let total = noise_ref.get(sphere_to_cart(theta, phi, rho));
         blend_pixel(total, light, dark)
