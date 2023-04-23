@@ -64,12 +64,24 @@ mod tests {
 
     #[test]
     fn test_coords() {
-        test_coordsroundtrip(1.0, 1.0, 1.0);
-        test_coordsroundtrip(0.1, 1.0, 1.0);
-        test_coordsroundtrip(0.3, 0.2, 1.5);
+        test_roundtrip_c_s_c(1.0, 1.0, 1.0);
+        test_roundtrip_c_s_c(0.1, 1.0, 1.0);
+        test_roundtrip_c_s_c(0.3, 0.2, 1.5);
+        test_roundtrip_s_c_s(1.0, 1.0, 1.0);
+        test_roundtrip_s_c_s(0.1, 1.0, 1.0);
+        test_roundtrip_s_c_s(0.3, 0.2, 1.5);
     }
 
-    fn test_coordsroundtrip(x: f64, y: f64, z: f64) {
+    fn test_roundtrip_s_c_s(theta: f64, phi: f64, rho: f64) {
+        let [x, y, z]  = sphere_to_cart(theta, phi, rho);
+        assert!(
+            is_close([theta, phi, rho], cart_to_sphere(x, y, z)),
+            "{:?} != {:?}",
+            (theta, phi, rho),
+            cart_to_sphere(x, y, z)
+        );
+    }
+    fn test_roundtrip_c_s_c(x: f64, y: f64, z: f64) {
         let [theta, phi, rho] = cart_to_sphere(x, y, z);
         assert!(
             is_close([x, y, z], sphere_to_cart(theta, phi, rho)),
