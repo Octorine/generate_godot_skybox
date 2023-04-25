@@ -43,15 +43,15 @@ impl Star {
         let x = rng.gen_range(-1.0..1.0);
         let y = rng.gen_range(-1.0..1.0);
         let z = rng.gen_range(-1.0..1.0);
-        let [theta, phi, rho] = coords::cart_to_sphere(x, y, z);
-        let theta = theta * canvas.height() as f64 / (PI as f64);
+        let [theta, phi, _rho] = coords::cart_to_sphere(x, y, z);
+        let theta = theta * canvas.height() as f64 / PI as f64 + canvas.height() as f64 * 0.5;
         let theta = theta.round() as i64;
-        let phi = phi * canvas.width() as f64 / PI as f64;
+        let phi = phi * canvas.width() as f64 / PI as f64 + canvas.width() as f64 * 0.5;
         let phi = phi as i64;
         self.blit(
             canvas,
-            theta,
             phi,
+            theta,
             rng.gen_range(0.0..PI),
             rng.gen_range(0.25..1.0),
         )
