@@ -21,7 +21,11 @@ fn main() {
         let polar = (x as f64 / width_float - 0.5) * 2.0 * PI;
         let azimuthal = (y as f64 / height_float - 0.5) * PI;
         let radius = 2.0;
-        let sphere = coords::Spherical{azimuthal, polar, radius};
+        let sphere = coords::Spherical {
+            azimuthal,
+            polar,
+            radius,
+        };
         let total = noise_ref.get(sphere.to_rectangular().arr());
         blend_pixel(total, light, dark)
     });
