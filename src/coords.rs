@@ -1,7 +1,7 @@
 // Spherical Coordinates in this program are defined as:
-//  theta - vertical angle from the z axis ccw
-//  phi - horizontal angle from the x axis  ccw
-//  rho - distance from the origin
+//  azimuthal - vertical angle from the z axis ccw
+//  polar - horizontal angle from the x axis  ccw
+//  radius - distance from the origin
 //
 // Cartesian Coordinates are as follows:
 //  x - horizontal with positive to the right
@@ -10,29 +10,59 @@
 
 use std::f64::consts::PI;
 
-pub fn sphere_to_cart(theta: f64, phi: f64, rho: f64) -> [f64; 3] {
-    let phi = PI * 0.5 - phi;
-    let x = rho * theta.cos() * phi.sin();
-    let y = rho * phi.cos();
-    let z = rho * theta.sin() * phi.sin();
-    [x, y, z]
+#[derive(Debug)]
+pub struct Spherical {
+    pub azimuthal: f64,
+    pub polar: f64,
+    pub radius: f64,
 }
 
-pub fn cart_to_sphere(x: f64, y: f64, z: f64) -> [f64; 3] {
-    let rho = (x * x + y * y + z * z).sqrt();
-    let theta = if x == 0.0 { 0.0 } else { (z / x).atan() };
-    let phi = if rho == 0.0 {
-        0.0
-    } else {
-        PI * 0.5 - (y / rho).acos()
-    };
-    [theta, phi, rho]
+impl Spherical {
+    pub fn to_rectangular(&self) -> Rectangular {
+        let phi = PI * 0.5 - self.azimuthal;
+        let x = self.radius * self.polar.cos() * phi.sin();
+        let y = self.radius * phi.cos();
+        let z = self.radius * self.polar.sin() * phi.sin();
+        Rectangular { x, y, z }
+    }
+    pub fn arr(&self) -> [f64; 3] {
+        [self.azimuthal, self.polar, self.radius]
+    }
+}
+#[derive(Debug)]
+pub struct Rectangular {
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
+impl Rectangular {
+    pub fn to_spherical(&self) -> Spherical {
+        let radius = (self.x * self.x + self.y * self.y + self.z * self.z).sqrt();
+        let polar = if self.x == 0.0 {
+            0.0
+        } else {
+            (self.z / self.x).atan()
+        };
+        let azimuthal = if radius == 0.0 {
+            0.0
+        } else {
+            PI * 0.5 - (self.y / radius).acos()
+        };
+        Spherical {
+            azimuthal,
+            polar,
+            radius,
+        }
+    }
+    pub fn arr(&self) -> [f64; 3] {
+        [self.x, self.y, self.z]
+    }
+}
 #[cfg(test)]
 
 mod tests {
-    use crate::coords::{cart_to_sphere, sphere_to_cart};
+    use crate::coords::{Rectangular, Spherical};
     use std::f64::consts::PI;
 
     fn is_close(a: [f64; 3], b: [f64; 3]) -> bool {
@@ -44,21 +74,60 @@ mod tests {
     #[test]
     fn test_s_to_c() {
         assert!(
-            is_close(sphere_to_cart(0.0, 0.0, 1.0), [1.0, 0.0, 0.0]),
+            is_close(
+                Spherical {
+                    azimuthal: 0.0,
+                    polar: 0.0,
+                    radius: 1.0
+                }
+                .to_rectangular()
+                .arr(),
+                [1.0, 0.0, 0.0]
+            ),
             "{:?} != {:?}",
-            sphere_to_cart(0.0, 0.0, 1.0),
+            Spherical {
+                azimuthal: 0.0,
+                polar: 0.0,
+                radius: 1.0
+            }
+            .to_rectangular()
+            .arr(),
             [1.0, 0.0, 0.0]
         );
-        assert!(is_close(sphere_to_cart(PI, 0.0, 1.0), [-1.0, 0.0, 0.0]));
+        assert!(is_close(
+            Spherical {
+                azimuthal: PI,
+                polar: 0.0,
+                radius: 1.0
+            }
+            .to_rectangular()
+            .arr(),
+            [-1.0, 0.0, 0.0]
+        ));
     }
 
     #[test]
     fn test_c_to_s() {
         assert!(
-            is_close([0.0, 0.0, 1.0], cart_to_sphere(1.0, 0.0, 0.0)),
+            is_close(
+                [0.0, 0.0, 1.0],
+                Rectangular {
+                    x: 1.0,
+                    y: 0.0,
+                    z: 0.0
+                }
+                .to_spherical()
+                .arr()
+            ),
             "{:?} != {:?}",
             [0.0, 0.0, 1.0],
-            cart_to_sphere(1.0, 0.0, 0.0)
+            Rectangular {
+                x: 1.0,
+                y: 0.0,
+                z: 0.0
+            }
+            .to_spherical()
+            .arr()
         );
     }
 
@@ -72,22 +141,26 @@ mod tests {
         test_roundtrip_s_c_s(0.3, 0.2, 1.5);
     }
 
-    fn test_roundtrip_s_c_s(theta: f64, phi: f64, rho: f64) {
-        let [x, y, z]  = sphere_to_cart(theta, phi, rho);
+    fn test_roundtrip_s_c_s(azimuthal: f64, polar: f64, radius: f64) {
+        let sphere = Spherical {
+            azimuthal,
+            polar,
+            radius,
+        };
         assert!(
-            is_close([theta, phi, rho], cart_to_sphere(x, y, z)),
+            is_close(sphere.arr(), sphere.to_rectangular().to_spherical().arr()),
             "{:?} != {:?}",
-            (theta, phi, rho),
-            cart_to_sphere(x, y, z)
+            sphere,
+            sphere.to_rectangular().to_spherical()
         );
     }
     fn test_roundtrip_c_s_c(x: f64, y: f64, z: f64) {
-        let [theta, phi, rho] = cart_to_sphere(x, y, z);
+        let rect = Rectangular { x, y, z };
         assert!(
-            is_close([x, y, z], sphere_to_cart(theta, phi, rho)),
+            is_close(rect.arr(), rect.to_spherical().to_rectangular().arr()),
             "{:?} != {:?}",
-            (x, y, z),
-            sphere_to_cart(rho, theta, phi)
+            rect.arr(),
+            rect.to_spherical().to_rectangular().arr()
         );
     }
 }

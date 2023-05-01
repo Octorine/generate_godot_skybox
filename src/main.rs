@@ -18,10 +18,11 @@ fn main() {
     let mut buffer = ImageBuffer::from_fn(width, height, |x, y| {
         let width_float = width as f64;
         let height_float = height as f64;
-        let phi = (x as f64 / width_float - 0.5) * 2.0 * PI;
-        let theta = (y as f64 / height_float - 0.5) * PI;
-        let rho = 2.0;
-        let total = noise_ref.get(coords::sphere_to_cart(theta, phi, rho));
+        let polar = (x as f64 / width_float - 0.5) * 2.0 * PI;
+        let azimuthal = (y as f64 / height_float - 0.5) * PI;
+        let radius = 2.0;
+        let sphere = coords::Spherical{azimuthal, polar, radius};
+        let total = noise_ref.get(sphere.to_rectangular().arr());
         blend_pixel(total, light, dark)
     });
     let star = Star::new();
